@@ -221,9 +221,9 @@ function Dashboard() {
         </div>
 
         <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
+           <div className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
             <h2 className="mb-4 text-lg font-semibold">Leads por status</h2>
-             <div className="h-56">
+              <div className="min-h-56 flex-1">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={statusData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <XAxis
