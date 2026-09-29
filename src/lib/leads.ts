@@ -5,7 +5,7 @@ export type Lead = {
   id: string | number;
   name: string;
   phone: string;
-  email: string;
+  propertyOfInterest: string;
   status: string;
   source: string;
   observation: string;
@@ -37,14 +37,17 @@ export function normalizeLead(raw: AnyRecord): Lead {
     id: (pick(raw, ["id", "lead_id", "leadId", "_id"]) as string | number) ?? "",
     name: str(pick(raw, ["name", "nome", "fullName", "full_name", "cliente"])),
     phone: str(pick(raw, ["phone", "telefone", "celular", "whatsapp", "phoneNumber"])),
-    email: str(pick(raw, ["email", "e_mail", "mail"])),
+    propertyOfInterest: str(
+      pick(raw, ["property_of_Interest", "property_of_interest", "propertyOfInterest", "imovel"]),
+    ),
     status: str(pick(raw, ["status", "situacao", "stage", "etapa"])) || "sem status",
-    source: str(pick(raw, ["source", "origem", "canal", "channel"])),
+    source: str(pick(raw, ["origin", "source", "origem", "canal", "channel"])),
     observation: str(pick(raw, ["observation", "observacao", "observacoes", "obs", "notes"])),
     createdAt: str(pick(raw, ["createdAt", "created_at", "criadoEm", "data"])) || null,
     lastContactAt:
       str(
         pick(raw, [
+          "last_contact",
           "lastContactAt",
           "last_contact_at",
           "lastContact",
@@ -70,6 +73,15 @@ function extractArray(payload: unknown): AnyRecord[] {
 export type StatusCount = { status: string; count: number };
 
 export function normalizeStatusCounts(payload: unknown): StatusCount[] {
+  if (payload && typeof payload === "object") {
+    const counts = (payload as AnyRecord).counts;
+    if (counts && typeof counts === "object" && !Array.isArray(counts)) {
+      return Object.entries(counts as AnyRecord).map(([status, count]) => ({
+        status,
+        count: Number(count) || 0,
+      }));
+    }
+  }
   const arr = extractArray(payload);
   if (arr.length) {
     return arr.map((item) => ({
@@ -104,6 +116,15 @@ export function useStatusCounts() {
   return useQuery({
     queryKey: ["leads", "quantityStatus"],
     queryFn: async () => normalizeStatusCounts(await apiFetch<unknown>("/leads/quantityStatus")),
+    refetchInterval: 60_000,
+    retry: 1,
+  });
+}
+
+export function useOriginCounts() {
+  return useQuery({
+    queryKey: ["leads", "quantityOrigin"],
+    queryFn: async () => normalizeStatusCounts(await apiFetch<unknown>("/leads/quantityOrigin")),
     refetchInterval: 60_000,
     retry: 1,
   });
@@ -151,4 +172,21 @@ export function formatDateTime(value: string | null): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function formatPhone(value: string): string {
+  const digits = value.replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  if (digits.length === 11) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  return value || "—";
+}
+
+export function whatsappUrl(value: string): string {
+  const digits = value.replace(/\D/g, "");
+  const international = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${international}`;
 }

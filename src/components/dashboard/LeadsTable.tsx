@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { PhoneCall, Search } from "lucide-react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { ExternalLink, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,7 +18,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatDate, formatDateTime, useLeads, useRegisterContact } from "@/lib/leads";
+import { formatDate, formatDateTime, formatPhone, useLeads, whatsappUrl } from "@/lib/leads";
 import { StatusBadge } from "./StatusBadge";
 import { ObservationDialog } from "./ObservationDialog";
 
@@ -36,7 +34,6 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
   }, [searchInput]);
 
   const { data, isLoading, isError, error } = useLeads({ status, search, stale });
-  const registerContact = useRegisterContact();
   const leads = useMemo(() => data ?? [], [data]);
 
   return (
@@ -78,7 +75,8 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Lead</TableHead>
-              <TableHead>Contato</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Imóvel de interesse</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Origem</TableHead>
               <TableHead>Entrada</TableHead>
@@ -90,14 +88,14 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   Carregando leads...
                 </TableCell>
               </TableRow>
             )}
             {isError && (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-destructive">
+                <TableCell colSpan={9} className="py-10 text-center text-destructive">
                   {(error as Error).message}
                 </TableCell>
               </TableRow>
@@ -108,9 +106,23 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
               leads.map((lead) => (
                 <TableRow key={String(lead.id)}>
                   <TableCell className="font-medium">{lead.name || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    <div>{lead.phone || "—"}</div>
-                    {lead.email && <div className="text-xs">{lead.email}</div>}
+                  <TableCell>
+                    {lead.phone ? (
+                      <a
+                        href={whatsappUrl(lead.phone)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 font-medium text-success hover:underline"
+                      >
+                        {formatPhone(lead.phone)}
+                        <ExternalLink className="size-3.5" />
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-64 text-muted-foreground">
+                    {lead.propertyOfInterest || "—"}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={lead.status} />
@@ -126,21 +138,7 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
                     {lead.observation || "—"}
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() =>
-                          registerContact.mutate(lead.id, {
-                            onSuccess: () => toast.success("Contato registrado"),
-                            onError: (err) => toast.error((err as Error).message),
-                          })
-                        }
-                      >
-                        <PhoneCall className="size-4" />
-                        Contato
-                      </Button>
+                    <div className="flex justify-end">
                       <ObservationDialog lead={lead} />
                     </div>
                   </TableCell>
@@ -148,7 +146,7 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
               ))}
             {!isLoading && !isError && leads.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                   Nenhum lead encontrado com esses filtros.
                 </TableCell>
               </TableRow>

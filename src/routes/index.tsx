@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -11,12 +11,19 @@ import {
   Pie,
   PieChart,
 } from "recharts";
-import { ArrowDown, Flame, Users, AlertTriangle, CalendarClock } from "lucide-react";
+import { ArrowDown, Flame, Users, AlertTriangle, BadgeCheck } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { ApiSettings } from "@/components/dashboard/ApiSettings";
 import { LeadsTable } from "@/components/dashboard/LeadsTable";
 import { StatusBadge, statusColorVar } from "@/components/dashboard/StatusBadge";
-import { formatDateTime, useLeads, useStatusCounts } from "@/lib/leads";
+import {
+  formatDateTime,
+  formatPhone,
+  useLeads,
+  useOriginCounts,
+  useStatusCounts,
+  whatsappUrl,
+} from "@/lib/leads";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -73,7 +80,15 @@ function Kpi({
 
 function Dashboard() {
   const { data: counts } = useStatusCounts();
+  const { data: originCounts } = useOriginCounts();
   const { data: allLeads, isError, error } = useLeads();
+  const [currentTime, setCurrentTime] = useState<string>("");
+
+  useEffect(() => {
+    setCurrentTime(formatDateTime(new Date().toISOString()));
+    const refreshTimer = window.setTimeout(() => window.location.reload(), 60_000);
+    return () => window.clearTimeout(refreshTimer);
+  }, []);
 
   const leads = useMemo(() => allLeads ?? [], [allLeads]);
 
@@ -101,6 +116,12 @@ function Dashboard() {
   }).length;
 
   const sourceData = useMemo(() => {
+    if (originCounts && originCounts.length) {
+      return originCounts
+        .map(({ status, count }) => ({ name: status, value: count }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 7);
+    }
     const map = new Map<string, number>();
     for (const lead of leads) {
       const key = lead.source || "Sem origem";
@@ -110,10 +131,11 @@ function Dashboard() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
-  }, [leads]);
+  }, [originCounts, leads]);
 
   const recent = leads.slice(0, 6);
   const statuses = statusData.map((item) => item.status);
+  const qualified = statusData.find((item) => item.status.toLowerCase() === "qualificado")?.count ?? 0;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -121,20 +143,21 @@ function Dashboard() {
 
       {/* TV view: fits a 1200x900 fullscreen display */}
       <section className="flex min-h-screen flex-col gap-5 px-8 py-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <span className="rounded-lg bg-[image:var(--gradient-brand)] px-3 py-1.5 text-2xl font-black tracking-tight text-primary-foreground">
+        <header className="-mx-8 -mt-6 flex min-h-22 flex-wrap items-center justify-between gap-4 border-b border-header-border bg-header px-8 py-4 text-header-foreground shadow-[var(--shadow-header)]">
+          <div className="flex min-w-0 items-center gap-5">
+            <span className="text-4xl font-extrabold tracking-normal text-primary" aria-label="CRI">
               CRI
             </span>
-            <div>
-              <h1 className="text-2xl font-bold leading-tight">Painel de Leads</h1>
-              <p className="text-sm text-muted-foreground">
+            <div className="hidden h-9 w-px bg-header-border sm:block" />
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold leading-tight">Painel de Leads</h1>
+              <p className="truncate text-xs text-header-muted">
                 CRI Soluções Imobiliárias · atualização automática a cada minuto
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{formatDateTime(new Date().toISOString())}</span>
+            {currentTime && <span className="hidden text-sm font-medium text-header-muted sm:inline">{currentTime}</span>}
             <ApiSettings />
           </div>
         </header>
@@ -150,7 +173,7 @@ function Dashboard() {
           <Kpi label="Total de leads" value={total} icon={Users} tone="brand" />
           <Kpi label="Entraram hoje" value={newToday} icon={Flame} />
           <Kpi label="Sem contato há 3+ dias" value={staleLeads} icon={AlertTriangle} tone="warn" />
-          <Kpi label="Status ativos" value={statusData.length} icon={CalendarClock} />
+          <Kpi label="Leads qualificados" value={qualified} icon={BadgeCheck} />
         </div>
 
         <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
@@ -235,8 +258,21 @@ function Dashboard() {
                     className="flex items-center justify-between gap-2 border-b border-border/60 pb-2 last:border-0"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{lead.name || "Sem nome"}</p>
-                      <p className="truncate text-xs text-muted-foreground">{lead.phone}</p>
+                      {lead.phone ? (
+                        <a
+                          href={whatsappUrl(lead.phone)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="block truncate text-sm font-medium hover:text-success hover:underline"
+                        >
+                          {lead.name || "Sem nome"}
+                        </a>
+                      ) : (
+                        <p className="truncate text-sm font-medium">{lead.name || "Sem nome"}</p>
+                      )}
+                      <p className="truncate text-xs text-muted-foreground">
+                        {formatPhone(lead.phone)} · Último contato: {formatDateTime(lead.lastContactAt)}
+                      </p>
                     </div>
                     <StatusBadge status={lead.status} />
                   </li>
