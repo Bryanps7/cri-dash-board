@@ -1,24 +1,269 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
+import {
+  Bar,
+  BarChart,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Pie,
+  PieChart,
+} from "recharts";
+import { ArrowDown, Flame, Users, AlertTriangle, CalendarClock } from "lucide-react";
+import { Toaster } from "@/components/ui/sonner";
+import { ApiSettings } from "@/components/dashboard/ApiSettings";
+import { LeadsTable } from "@/components/dashboard/LeadsTable";
+import { StatusBadge, statusColorVar } from "@/components/dashboard/StatusBadge";
+import { formatDateTime, useLeads, useStatusCounts } from "@/lib/leads";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Painel de Leads | CRI Soluções Imobiliárias" },
+      {
+        name: "description",
+        content:
+          "Painel de acompanhamento de leads da CRI Soluções Imobiliárias: resumo por status, gráfico e tabela completa com busca e filtros.",
+      },
+      { property: "og:title", content: "Painel de Leads | CRI Soluções Imobiliárias" },
+      {
+        property: "og:description",
+        content: "Acompanhe em tempo real os leads da CRI por status, origem e último contato.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Dashboard,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Kpi({
+  label,
+  value,
+  icon: Icon,
+  tone = "default",
+}: {
+  label: string;
+  value: string | number;
+  icon: typeof Users;
+  tone?: "default" | "brand" | "warn";
+}) {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex items-center gap-4 rounded-xl border border-border bg-[image:var(--gradient-panel)] px-5 py-4 shadow-[var(--shadow-panel)]">
+      <div
+        className={
+          tone === "brand"
+            ? "rounded-lg bg-primary/15 p-3 text-primary"
+            : tone === "warn"
+              ? "rounded-lg bg-destructive/15 p-3 text-destructive"
+              : "rounded-lg bg-secondary p-3 text-foreground"
+        }
+      >
+        <Icon className="size-6" />
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-3xl font-bold leading-tight">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard() {
+  const { data: counts } = useStatusCounts();
+  const { data: allLeads, isError, error } = useLeads();
+
+  const leads = useMemo(() => allLeads ?? [], [allLeads]);
+
+  const statusData = useMemo(() => {
+    if (counts && counts.length) return counts;
+    const map = new Map<string, number>();
+    for (const lead of leads) map.set(lead.status, (map.get(lead.status) ?? 0) + 1);
+    return [...map.entries()].map(([status, count]) => ({ status, count }));
+  }, [counts, leads]);
+
+  const total = statusData.reduce((sum, item) => sum + item.count, 0) || leads.length;
+
+  const now = Date.now();
+  const newToday = leads.filter((lead) => {
+    if (!lead.createdAt) return false;
+    const date = new Date(lead.createdAt);
+    return !Number.isNaN(date.getTime()) && now - date.getTime() < 86_400_000;
+  }).length;
+
+  const staleLeads = leads.filter((lead) => {
+    const ref = lead.lastContactAt ?? lead.createdAt;
+    if (!ref) return false;
+    const date = new Date(ref);
+    return !Number.isNaN(date.getTime()) && now - date.getTime() > 3 * 86_400_000;
+  }).length;
+
+  const sourceData = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const lead of leads) {
+      const key = lead.source || "Sem origem";
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return [...map.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [leads]);
+
+  const recent = leads.slice(0, 6);
+  const statuses = statusData.map((item) => item.status);
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Toaster />
+
+      {/* TV view: fits a 1200x900 fullscreen display */}
+      <section className="flex min-h-screen flex-col gap-5 px-8 py-6">
+        <header className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <span className="rounded-lg bg-[image:var(--gradient-brand)] px-3 py-1.5 text-2xl font-black tracking-tight text-primary-foreground">
+              CRI
+            </span>
+            <div>
+              <h1 className="text-2xl font-bold leading-tight">Painel de Leads</h1>
+              <p className="text-sm text-muted-foreground">
+                CRI Soluções Imobiliárias · atualização automática a cada minuto
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{formatDateTime(new Date().toISOString())}</span>
+            <ApiSettings />
+          </div>
+        </header>
+
+        {isError && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            Não foi possível falar com o servidor de leads ({(error as Error).message}). Confira se
+            ele está rodando e ajuste o endereço em “Servidor”.
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Kpi label="Total de leads" value={total} icon={Users} tone="brand" />
+          <Kpi label="Entraram hoje" value={newToday} icon={Flame} />
+          <Kpi label="Sem contato há 3+ dias" value={staleLeads} icon={AlertTriangle} tone="warn" />
+          <Kpi label="Status ativos" value={statusData.length} icon={CalendarClock} />
+        </div>
+
+        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
+            <h2 className="mb-4 text-lg font-semibold">Leads por status</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={statusData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <XAxis
+                    dataKey="status"
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    allowDecimals={false}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "var(--secondary)" }}
+                    contentStyle={{
+                      background: "var(--popover)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      color: "var(--popover-foreground)",
+                    }}
+                  />
+                  <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                    {statusData.map((item) => (
+                      <Cell key={item.status} fill={statusColorVar(item.status)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {statusData.map((item) => (
+                <StatusBadge key={item.status} status={`${item.status} · ${item.count}`} />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)]">
+              <h2 className="mb-2 text-lg font-semibold">Origem dos leads</h2>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={sourceData}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={40}
+                      outerRadius={62}
+                      paddingAngle={3}
+                    >
+                      {sourceData.map((item) => (
+                        <Cell key={item.name} fill={statusColorVar(item.name)} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "var(--popover)",
+                        border: "1px solid var(--border)",
+                        borderRadius: 12,
+                        color: "var(--popover-foreground)",
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="flex-1 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)]">
+              <h2 className="mb-3 text-lg font-semibold">Últimos leads</h2>
+              <ul className="space-y-2">
+                {recent.map((lead) => (
+                  <li
+                    key={String(lead.id)}
+                    className="flex items-center justify-between gap-2 border-b border-border/60 pb-2 last:border-0"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{lead.name || "Sem nome"}</p>
+                      <p className="truncate text-xs text-muted-foreground">{lead.phone}</p>
+                    </div>
+                    <StatusBadge status={lead.status} />
+                  </li>
+                ))}
+                {recent.length === 0 && (
+                  <li className="text-sm text-muted-foreground">Nenhum lead cadastrado ainda.</li>
+                )}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <ArrowDown className="size-3.5" />
+          Role para ver a lista completa de leads
+        </p>
+      </section>
+
+      <section className="space-y-4 border-t border-border bg-background px-8 py-10">
+        <div>
+          <h2 className="text-xl font-bold">Todos os leads</h2>
+          <p className="text-sm text-muted-foreground">
+            Busque, filtre por status e registre observações.
+          </p>
+        </div>
+        <LeadsTable statuses={statuses} />
+      </section>
     </div>
   );
 }
