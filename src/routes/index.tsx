@@ -11,8 +11,12 @@ import {
   Pie,
   PieChart,
 } from "recharts";
-import { ArrowDown, Flame, Users, AlertTriangle, BadgeCheck } from "lucide-react";
+import { ArrowDown, Flame, Users, AlertTriangle, BadgeCheck, Globe2, Handshake } from "lucide-react";
+import { SiTiktok, SiLinkedin, SiInstagram, SiYoutube, SiFacebook } from "react-icons/si";
 import { Toaster } from "@/components/ui/sonner";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { ApiSettings } from "@/components/dashboard/ApiSettings";
 import { LeadsTable } from "@/components/dashboard/LeadsTable";
 import { StatusBadge, statusColorVar } from "@/components/dashboard/StatusBadge";
@@ -45,6 +49,20 @@ export const Route = createFileRoute("/")({
   }),
   component: Dashboard,
 });
+
+const originStyles: Record<string, { color: string; Icon: typeof Globe2 }> = {
+  tiktok: { color: "var(--origin-tiktok)", Icon: SiTiktok },
+  linkedin: { color: "var(--origin-linkedin)", Icon: SiLinkedin },
+  instagram: { color: "var(--origin-instagram)", Icon: SiInstagram },
+  youtube: { color: "var(--origin-youtube)", Icon: SiYoutube },
+  facebook: { color: "var(--origin-facebook)", Icon: SiFacebook },
+  site: { color: "var(--origin-site)", Icon: Globe2 },
+  "indicação": { color: "var(--origin-referral)", Icon: Handshake },
+};
+
+function originStyle(name: string) {
+  return originStyles[name.toLocaleLowerCase("pt-BR")] ?? { color: "var(--muted-foreground)", Icon: Globe2 };
+}
 
 function Kpi({
   label,
@@ -83,12 +101,39 @@ function Dashboard() {
   const { data: originCounts } = useOriginCounts();
   const { data: allLeads, isError, error } = useLeads();
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [autoRefresh, setAutoRefresh] = useState<boolean | null>(null);
+  const [tableStatus, setTableStatus] = useState("all");
+  const [tableSearch, setTableSearch] = useState("");
 
   useEffect(() => {
     setCurrentTime(formatDateTime(new Date().toISOString()));
+    try {
+      setAutoRefresh(window.sessionStorage.getItem("cri-auto-refresh") !== "false");
+    } catch {
+      setAutoRefresh(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!autoRefresh) return;
     const refreshTimer = window.setTimeout(() => window.location.reload(), 60_000);
     return () => window.clearTimeout(refreshTimer);
-  }, []);
+  }, [autoRefresh]);
+
+  function toggleRefresh(enabled: boolean) {
+    setAutoRefresh(enabled);
+    try { window.sessionStorage.setItem("cri-auto-refresh", String(enabled)); } catch { /* Browser may block storage. */ }
+  }
+
+  function selectStatus(status: string) {
+    setTableStatus(status);
+    document.getElementById("all-leads")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function selectOrigin(origin: string) {
+    setTableSearch(origin);
+    document.getElementById("all-leads")?.scrollIntoView({ behavior: "smooth" });
+  }
 
   const leads = useMemo(() => allLeads ?? [], [allLeads]);
 
@@ -108,13 +153,6 @@ function Dashboard() {
     return !Number.isNaN(date.getTime()) && now - date.getTime() < 86_400_000;
   }).length;
 
-  const staleLeads = leads.filter((lead) => {
-    const ref = lead.lastContactAt ?? lead.createdAt;
-    if (!ref) return false;
-    const date = new Date(ref);
-    return !Number.isNaN(date.getTime()) && now - date.getTime() > 3 * 86_400_000;
-  }).length;
-
   const sourceData = useMemo(() => {
     if (originCounts && originCounts.length) {
       return originCounts
@@ -130,7 +168,7 @@ function Dashboard() {
     return [...map.entries()]
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
+       .slice(0, 7);
   }, [originCounts, leads]);
 
   const recent = [...leads]
@@ -147,19 +185,21 @@ function Dashboard() {
       <section className="flex min-h-screen flex-col gap-5 px-4 py-6 sm:px-8">
         <header className="-mx-4 -mt-6 flex min-h-22 flex-wrap items-center justify-between gap-4 border-b border-header-border bg-header px-4 py-4 text-header-foreground shadow-[var(--shadow-header)] sm:-mx-8 sm:px-8">
           <div className="flex min-w-0 items-center gap-5">
-            <span className="text-4xl font-extrabold tracking-normal text-primary" aria-label="CRI">
-              CRI
-            </span>
+             <img src="/favicon.svg" alt="CRI" className="h-9 w-auto shrink-0 sm:h-11" />
             <div className="hidden h-9 w-px bg-header-border sm:block" />
             <div className="min-w-0">
               <h1 className="truncate text-xl font-bold leading-tight">Painel de Leads</h1>
               <p className="truncate text-xs text-header-muted">
-                CRI Soluções Imobiliárias · atualização automática a cada minuto
+                 CRI Soluções Imobiliárias
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {currentTime && <span className="hidden text-sm font-medium text-header-muted sm:inline">{currentTime}</span>}
+             <div className="flex items-center gap-2">
+               <Switch id="auto-refresh" checked={autoRefresh ?? false} onCheckedChange={toggleRefresh} disabled={autoRefresh === null} aria-label="Atualização automática" />
+               <Label htmlFor="auto-refresh" className="text-xs font-medium text-header-foreground sm:text-sm">Atualizar a cada 1 min</Label>
+             </div>
             <ApiSettings />
           </div>
         </header>
@@ -174,14 +214,14 @@ function Dashboard() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Kpi label="Total de leads" value={total} icon={Users} tone="brand" />
           <Kpi label="Entraram hoje" value={newToday} icon={Flame} />
-          <Kpi label="Sem contato há 3+ dias" value={staleLeads} icon={AlertTriangle} tone="warn" />
+           <Kpi label="Último contato há 7 dias" value={leads.filter((lead) => { const ref = lead.lastContactAt ?? lead.createdAt; return ref && !Number.isNaN(new Date(ref).getTime()) && now - new Date(ref).getTime() >= 7 * 86_400_000; }).length} icon={AlertTriangle} tone="warn" />
           <Kpi label="Leads qualificados" value={qualified} icon={BadgeCheck} />
         </div>
 
         <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
             <h2 className="mb-4 text-lg font-semibold">Leads por status</h2>
-            <div className="h-64">
+             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={statusData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <XAxis
@@ -205,7 +245,7 @@ function Dashboard() {
                       color: "var(--popover-foreground)",
                     }}
                   />
-                  <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                   <Bar dataKey="count" radius={[8, 8, 0, 0]} className="cursor-pointer" onClick={(entry) => selectStatus(entry.status)}>
                     {statusData.map((item) => (
                       <Cell key={item.status} fill={statusColorVar(item.status)} />
                     ))}
@@ -213,9 +253,12 @@ function Dashboard() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
+             <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-4 sm:grid-cols-4">
               {statusData.map((item) => (
-                <StatusBadge key={item.status} status={`${item.status} · ${item.count}`} />
+                 <Button key={item.status} type="button" variant="ghost" onClick={() => selectStatus(item.status)} className="h-auto min-w-0 justify-between gap-2 border border-border px-3 py-3 text-left hover:bg-secondary" title={`Filtrar leads: ${item.status}`}>
+                   <span className="min-w-0 truncate capitalize">{item.status.replaceAll("_", " ")}</span>
+                   <span className="shrink-0 font-bold text-primary">{item.count}</span>
+                 </Button>
               ))}
             </div>
           </div>
@@ -223,31 +266,27 @@ function Dashboard() {
           <div className="flex min-w-0 flex-col gap-4">
             <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)]">
               <h2 className="mb-2 text-lg font-semibold">Origem dos leads</h2>
-              <div className="h-40">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={sourceData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={40}
-                      outerRadius={62}
-                      paddingAngle={3}
-                    >
-                      {sourceData.map((item) => (
-                        <Cell key={item.name} fill={statusColorVar(item.name)} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--popover)",
-                        border: "1px solid var(--border)",
-                        borderRadius: 12,
-                        color: "var(--popover-foreground)",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+               <div className="flex items-center gap-3">
+                 <div className="h-48 min-w-0 flex-1">
+                   <ResponsiveContainer width="100%" height="100%">
+                     <PieChart>
+                       <Pie data={sourceData} dataKey="value" nameKey="name" innerRadius={17} outerRadius={74} paddingAngle={2} className="cursor-pointer" onClick={(entry) => selectOrigin(entry.name)}>
+                         {sourceData.map((item) => <Cell key={item.name} fill={originStyle(item.name).color} />)}
+                       </Pie>
+                       <Tooltip contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }} />
+                     </PieChart>
+                   </ResponsiveContainer>
+                 </div>
+                 <div className="min-w-0 flex-1 space-y-0.5">
+                   {sourceData.map((item) => {
+                     const { Icon, color } = originStyle(item.name);
+                     return <Button key={item.name} type="button" variant="ghost" onClick={() => selectOrigin(item.name)} className="h-7 w-full min-w-0 justify-start gap-2 px-1 text-xs hover:bg-secondary" title={`Buscar origem: ${item.name}`}>
+                       <Icon size={15} className="shrink-0" style={{ color }} aria-hidden="true" />
+                       <span className="min-w-0 flex-1 truncate text-left capitalize">{item.name}</span>
+                       <span className="text-muted-foreground">{item.value}</span>
+                     </Button>;
+                   })}
+                 </div>
               </div>
             </div>
 
@@ -293,14 +332,14 @@ function Dashboard() {
         </p>
       </section>
 
-      <section className="space-y-4 border-t border-border bg-background px-4 py-10 sm:px-8">
+       <section id="all-leads" className="space-y-4 border-t border-border bg-background px-4 py-10 sm:px-8">
         <div>
           <h2 className="text-xl font-bold">Todos os leads</h2>
           <p className="text-sm text-muted-foreground">
             Busque, filtre por status e registre observações.
           </p>
         </div>
-        <LeadsTable statuses={statuses} />
+         <LeadsTable statuses={statuses} status={tableStatus} onStatusChange={setTableStatus} searchInput={tableSearch} onSearchChange={setTableSearch} />
       </section>
     </div>
   );
