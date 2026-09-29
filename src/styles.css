@@ -48,6 +48,13 @@
   --color-header-foreground: var(--header-foreground);
   --color-header-muted: var(--header-muted);
   --color-header-border: var(--header-border);
+  --color-origin-tiktok: var(--origin-tiktok);
+  --color-origin-linkedin: var(--origin-linkedin);
+  --color-origin-instagram: var(--origin-instagram);
+  --color-origin-youtube: var(--origin-youtube);
+  --color-origin-facebook: var(--origin-facebook);
+  --color-origin-site: var(--origin-site);
+  --color-origin-referral: var(--origin-referral);
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
 
   --color-border: var(--border);
@@ -91,6 +98,13 @@
   --header-foreground: oklch(0.22 0.08 270);
   --header-muted: oklch(0.52 0.035 270);
   --header-border: oklch(0.86 0.008 260);
+  --origin-tiktok: oklch(0.16 0 0);
+  --origin-linkedin: oklch(0.34 0.12 255);
+  --origin-instagram: oklch(0.67 0.23 355);
+  --origin-youtube: oklch(0.6 0.23 27);
+  --origin-facebook: oklch(0.57 0.2 255);
+  --origin-site: oklch(0.66 0.203 42);
+  --origin-referral: oklch(0.68 0.17 150);
   --destructive: oklch(0.62 0.23 27);
   --destructive-foreground: oklch(0.99 0 0);
   --border: oklch(0.35 0.07 271);
@@ -161,3 +175,13 @@
     color: var(--color-foreground);
   }
 }
+
+html {
+  scrollbar-color: var(--border) var(--background);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: var(--background); }
+*::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }

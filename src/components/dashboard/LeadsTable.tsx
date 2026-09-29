@@ -22,10 +22,14 @@ import { formatDate, formatDateTime, formatPhone, useLeads, whatsappUrl } from "
 import { StatusBadge } from "./StatusBadge";
 import { ObservationDialog } from "./ObservationDialog";
 
-export function LeadsTable({ statuses }: { statuses: string[] }) {
-  const [searchInput, setSearchInput] = useState("");
+export function LeadsTable({ statuses, status, onStatusChange, searchInput, onSearchChange }: {
+  statuses: string[];
+  status: string;
+  onStatusChange: (value: string) => void;
+  searchInput: string;
+  onSearchChange: (value: string) => void;
+}) {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
   const [stale, setStale] = useState(false);
 
   useEffect(() => {
@@ -43,13 +47,13 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Buscar por nome, telefone ou e-mail"
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Buscar por nome, telefone ou origem"
             maxLength={100}
             className="pl-9"
           />
         </div>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={onStatusChange}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -65,7 +69,7 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
         <div className="flex items-center gap-2 rounded-md border border-border px-3 py-2">
           <Switch id="stale" checked={stale} onCheckedChange={setStale} />
           <Label htmlFor="stale" className="text-sm text-muted-foreground">
-            Só parados
+            Último contato há 7 dias
           </Label>
         </div>
       </div>
