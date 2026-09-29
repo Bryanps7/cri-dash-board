@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Treat `/leads/quantityStatus` and `/leads/quantityOrigin` as authoritative `{ counts, total }` summaries, falling back to lead rows only when absent; this keeps dashboard totals accurate when the list is filtered or limited.
+- Keep dashboard chart selections in the parent page and pass them into table filters; this ensures chart clicks and table controls always show the same selection.
