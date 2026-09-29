@@ -133,7 +133,9 @@ function Dashboard() {
       .slice(0, 5);
   }, [originCounts, leads]);
 
-  const recent = leads.slice(0, 6);
+  const recent = [...leads]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 6);
   const statuses = statusData.map((item) => item.status);
   const qualified = statusData.find((item) => item.status.toLowerCase() === "qualificado")?.count ?? 0;
 

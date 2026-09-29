@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Treat `/leads/quantityStatus` and `/leads/quantityOrigin` as authoritative `{ counts, total }` summaries, falling back to lead rows only when absent; this keeps dashboard totals accurate when the list is filtered or limited.
