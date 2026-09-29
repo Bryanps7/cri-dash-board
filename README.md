@@ -54,3 +54,7 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+Para testar localmente a versão de produção, execute `npm run build` e depois
+`npm run preview` (http://localhost:4173/). O preview usa o servidor e os assets
+gerados em `dist`; não basta servir `dist/public` como um site estático.
