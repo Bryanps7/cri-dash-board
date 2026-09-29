@@ -30,7 +30,7 @@ export function ApiSettings() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button variant="header" size="sm" className="gap-2">
           <Settings2 className="size-4" />
           Servidor
         </Button>

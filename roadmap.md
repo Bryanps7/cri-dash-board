@@ -1,0 +1,5 @@
+- [x] Match the dashboard header to the official site's light, orange-accented style.
+- [x] Refresh the full dashboard page every minute.
+- [x] Support the documented lead fields and status/origin summary responses.
+- [x] Replace the contact action with Brazilian-formatted WhatsApp links and show last contact for recent leads.
+- [x] Verify rendering and interactions with representative API responses.

@@ -74,7 +74,7 @@ export type StatusCount = { status: string; count: number };
 
 export function normalizeStatusCounts(payload: unknown): StatusCount[] {
   if (payload && typeof payload === "object") {
-    const counts = (payload as AnyRecord).counts;
+    const counts = (payload as AnyRecord)["counts"];
     if (counts && typeof counts === "object" && !Array.isArray(counts)) {
       return Object.entries(counts as AnyRecord).map(([status, count]) => ({
         status,

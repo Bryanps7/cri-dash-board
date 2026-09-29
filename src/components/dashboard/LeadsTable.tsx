@@ -39,7 +39,7 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-64 flex-1">
+        <div className="relative min-w-0 flex-1 basis-64">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchInput}
@@ -70,7 +70,7 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-panel)]">
+      <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-[var(--shadow-panel)]">
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
