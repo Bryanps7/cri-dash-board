@@ -96,10 +96,13 @@ export function LeadsTable({ statuses }: { statuses: string[] }) {
               </TableRow>
             )}
             {isError && (
-              <TableCell colSpan={8} className="py-10 text-center text-destructive">
-                {(error as Error).message}
-              </TableCell>
+              <TableRow>
+                <TableCell colSpan={8} className="py-10 text-center text-destructive">
+                  {(error as Error).message}
+                </TableCell>
+              </TableRow>
             )}
+
             {!isLoading &&
               !isError &&
               leads.map((lead) => (
