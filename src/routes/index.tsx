@@ -184,10 +184,10 @@ function Dashboard() {
       <Toaster />
 
       {/* TV view: fits a 1200x900 fullscreen display */}
-      <section className="flex min-h-screen flex-col gap-5 px-4 py-6 sm:px-8">
+       <section className="flex min-h-screen flex-col gap-5 px-4 py-6 sm:px-8">
         <header className="-mx-4 -mt-6 flex min-h-22 flex-wrap items-center justify-between gap-4 border-b border-header-border bg-header px-4 py-4 text-header-foreground shadow-[var(--shadow-header)] sm:-mx-8 sm:px-8">
           <div className="flex min-w-0 items-center gap-5">
-             <img src="/favicon.svg" alt="CRI" className="h-9 w-auto shrink-0 sm:h-11" />
+             <img src="/cri-logo.svg" alt="CRI" className="h-9 w-auto shrink-0 sm:h-11" />
             <div className="hidden h-9 w-px bg-header-border sm:block" />
             <div className="min-w-0">
               <h1 className="truncate text-xl font-bold leading-tight">Painel de Leads</h1>
