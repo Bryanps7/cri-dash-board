@@ -58,21 +58,21 @@ function Kpi({
   tone?: "default" | "brand" | "warn";
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-xl border border-border bg-[image:var(--gradient-panel)] px-5 py-4 shadow-[var(--shadow-panel)]">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl border border-border bg-[image:var(--gradient-panel)] px-3 py-4 shadow-[var(--shadow-panel)] sm:gap-4 sm:px-5">
       <div
         className={
           tone === "brand"
-            ? "rounded-lg bg-primary/15 p-3 text-primary"
+            ? "shrink-0 rounded-lg bg-primary/15 p-2 text-primary sm:p-3"
             : tone === "warn"
-              ? "rounded-lg bg-destructive/15 p-3 text-destructive"
-              : "rounded-lg bg-secondary p-3 text-foreground"
+              ? "shrink-0 rounded-lg bg-destructive/15 p-2 text-destructive sm:p-3"
+              : "shrink-0 rounded-lg bg-secondary p-2 text-foreground sm:p-3"
         }
       >
         <Icon className="size-6" />
       </div>
       <div>
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-        <p className="text-3xl font-bold leading-tight">{value}</p>
+        <p className="text-[11px] uppercase text-muted-foreground sm:text-xs">{label}</p>
+        <p className="text-2xl font-bold leading-tight sm:text-3xl">{value}</p>
       </div>
     </div>
   );
@@ -144,8 +144,8 @@ function Dashboard() {
       <Toaster />
 
       {/* TV view: fits a 1200x900 fullscreen display */}
-      <section className="flex min-h-screen flex-col gap-5 px-8 py-6">
-        <header className="-mx-8 -mt-6 flex min-h-22 flex-wrap items-center justify-between gap-4 border-b border-header-border bg-header px-8 py-4 text-header-foreground shadow-[var(--shadow-header)]">
+      <section className="flex min-h-screen flex-col gap-5 px-4 py-6 sm:px-8">
+        <header className="-mx-4 -mt-6 flex min-h-22 flex-wrap items-center justify-between gap-4 border-b border-header-border bg-header px-4 py-4 text-header-foreground shadow-[var(--shadow-header)] sm:-mx-8 sm:px-8">
           <div className="flex min-w-0 items-center gap-5">
             <span className="text-4xl font-extrabold tracking-normal text-primary" aria-label="CRI">
               CRI
@@ -178,8 +178,8 @@ function Dashboard() {
           <Kpi label="Leads qualificados" value={qualified} icon={BadgeCheck} />
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
+        <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)] lg:col-span-2">
             <h2 className="mb-4 text-lg font-semibold">Leads por status</h2>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
@@ -220,7 +220,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex min-w-0 flex-col gap-4">
             <div className="rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-panel)]">
               <h2 className="mb-2 text-lg font-semibold">Origem dos leads</h2>
               <div className="h-40">
@@ -293,7 +293,7 @@ function Dashboard() {
         </p>
       </section>
 
-      <section className="space-y-4 border-t border-border bg-background px-8 py-10">
+      <section className="space-y-4 border-t border-border bg-background px-4 py-10 sm:px-8">
         <div>
           <h2 className="text-xl font-bold">Todos os leads</h2>
           <p className="text-sm text-muted-foreground">
