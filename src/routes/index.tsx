@@ -14,6 +14,7 @@ import {
 import { ArrowDown, Flame, Users, AlertTriangle, BadgeCheck, Globe2, Handshake } from "lucide-react";
 import { SiTiktok, SiInstagram, SiYoutube, SiFacebook } from "react-icons/si";
 import { FaLinkedin } from "react-icons/fa6";
+import type { IconType } from "react-icons";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -51,7 +52,7 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
-const originStyles: Record<string, { color: string; Icon: typeof Globe2 }> = {
+const originStyles: Record<string, { color: string; Icon: IconType | typeof Globe2 }> = {
   tiktok: { color: "var(--origin-tiktok)", Icon: SiTiktok },
   linkedin: { color: "var(--origin-linkedin)", Icon: FaLinkedin },
   instagram: { color: "var(--origin-instagram)", Icon: SiInstagram },
