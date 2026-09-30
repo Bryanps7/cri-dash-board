@@ -7,8 +7,9 @@
     "dev": "vite dev",
     "build": "vite build",
     "build:dev": "vite build --mode development",
-    "preview": "wrangler dev --config dist/server/wrangler.json --port 4173",
-    "lint": "eslint .",
+    "start": "node dist/server/index.mjs",
+    "preview": "npm run start",
+"lint": "eslint .",
     "format": "prettier --write ."
   },
   "overrides": {
