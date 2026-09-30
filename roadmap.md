@@ -6,3 +6,4 @@
 - [x] Add session-scoped optional refresh, clickable chart filters, seven-day stale label, origin icons/colors, and themed scrollbar.
 - [x] Place supplied CRI mark in the header and favicon, then verify desktop and mobile interactions.
 - [x] Point local production preview at Nitro's generated Cloudflare server configuration in `dist`.
+- [x] Remove the server selector and point lead requests to the fixed CRI API host.
