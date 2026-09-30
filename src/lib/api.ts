@@ -1,19 +1,7 @@
-const STORAGE_KEY = "cri.leads.apiBase";
-export const DEFAULT_API_BASE = "http://localhost:3000";
-
-export function getApiBase(): string {
-  if (typeof window === "undefined") return DEFAULT_API_BASE;
-  return window.localStorage.getItem(STORAGE_KEY) || DEFAULT_API_BASE;
-}
-
-export function setApiBase(base: string) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, base.replace(/\/+$/, ""));
-}
+const API_BASE = "https://cri-leads.onrender.com";
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const base = getApiBase().replace(/\/+$/, "");
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",

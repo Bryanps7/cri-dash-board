@@ -19,7 +19,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ApiSettings } from "@/components/dashboard/ApiSettings";
 import { LeadsTable } from "@/components/dashboard/LeadsTable";
 import { StatusBadge, statusColorVar } from "@/components/dashboard/StatusBadge";
 import {
@@ -202,14 +201,13 @@ function Dashboard() {
                <Switch id="auto-refresh" checked={autoRefresh ?? false} onCheckedChange={toggleRefresh} disabled={autoRefresh === null} aria-label="Atualização automática" />
                <Label htmlFor="auto-refresh" className="text-xs font-medium text-header-foreground sm:text-sm">Atualizar a cada 1 min</Label>
              </div>
-            <ApiSettings />
           </div>
         </header>
 
         {isError && (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            Não foi possível falar com o servidor de leads ({(error as Error).message}). Confira se
-            ele está rodando e ajuste o endereço em “Servidor”.
+             Não foi possível falar com o servidor de leads ({(error as Error).message}).
+             Confira a conexão e tente novamente.
           </div>
         )}
 

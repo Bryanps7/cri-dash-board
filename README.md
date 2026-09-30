@@ -32,7 +32,7 @@ router.put('/:id', update)                    // PUT   /leads/1
 
 router.patch('/:id/contact', registerContact) // PATCH /leads/1/contact
 
-o host dela é : localhost:3000
+O painel usa a API fixa em https://cri-leads.onrender.com.
 
 This project was built with [Lovable](https://lovable.dev).
 

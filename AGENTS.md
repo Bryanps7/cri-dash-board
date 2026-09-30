@@ -13,3 +13,4 @@
 - Keep dashboard chart selections in the parent page and pass them into table filters; this ensures chart clicks and table controls always show the same selection.
 - Keep Nitro build output under `dist` for local builds; deployments need both the server and client artifacts because this is a TanStack Start app.
 - Preview the Cloudflare Nitro output with Wrangler using `dist/server/wrangler.json`, not `vite preview`, because Vite looks for an absent `dist/server/server.js` instead of Nitro's `index.mjs`.
+- Use `https://cri-leads.onrender.com` as the fixed browser API host; the dashboard has no server selector so all viewers use the same endpoint.
